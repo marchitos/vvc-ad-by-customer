@@ -1,0 +1,507 @@
+<div id="dashboard">
+  <div id="main-content">
+    <div id="topbar">
+      <cv-avatar *ngIf="agent" size="medium" [url]="agent.avatar"></cv-avatar>
+      <span *ngIf="agent" class="name">{{agent.firstname}} {{agent.lastname}}</span>
+      <span class="spacer"></span>
+      <span class="notification" (click)="showContactBar = !showContactBar">
+        <cv-icon name="cv-bell" size="large"></cv-icon>
+        <span *ngIf="hasNotifications()" class="marker"></span>
+      </span>
+    </div>
+    <div id="content">
+
+    </div>
+  </div>
+  <div id="side-content" [ngClass]="{ open: showContactBar }">
+    <div id="contact-bar">
+      <div id="customer-list" *ngIf="!selectedCustomerId">
+        <div id="customer-list-head">
+          Customers
+        </div>
+        <div *ngFor="let customerId of customerIds"
+             (click)="showDetail(customerId)"
+             class="customer-card">
+          <div class="avatar-slot">
+            <cv-avatar [name]="customersInfo[customerId].nickname" size="medium"></cv-avatar>
+            <span *ngIf="customersInfo[customerId].online" class="is-online"></span>
+          </div>
+          <div class="content-slot">
+            <div class="name-slot">{{customersInfo[customerId].nickname}}</div>
+            <div class="description-slot" *ngIf="!lastMessageByCustomer[customerId].message"><cv-tt tr="CUSTOM.INCOMING_REQUEST"></cv-tt></div>
+            <div class="description-slot" *ngIf="lastMessageByCustomer[customerId].message">
+              {{lastMessageByCustomer[customerId].message}}
+            </div>
+          </div>
+          <div class="notification-slot">
+            <div class="time-ago-slot">{{lastMessageByCustomer[customerId].ts | timeAgo}}</div>
+            <div class="marker-slot">
+              <span class="marker" *ngIf="isNewMessage(customerId)"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="customer-detail" [ngClass]="{ show: selectedCustomerId && selectedCustomerId === loadedCustomer.customerId }">
+        <div class="detail-slot show">
+          <div class="media-slot"
+               [ngClass]="{ show: hasVideo(loadedCustomer.contactId), 'fullscreen': isVideoFullScreen }">
+            <vvc-video-default [contactId]="loadedCustomer.contactId"
+                               [isFullScreen]="isVideoFullScreen"
+                               (minimize)="unsetFullScreen($event, false)"
+                               (maximize)="setFullScreen($event, true)"></vvc-video-default>
+          </div>
+          <div class="contact-bar">
+            <div class="back" (click)="showList()"><cv-icon name="cv-back" size="large"></cv-icon></div>
+            <div class="avatar">
+              <cv-avatar [name]="loadedCustomer.nickname" size="medium"></cv-avatar>
+            </div>
+            <div class="info">
+              <div class="info-name">{{loadedCustomer.nickname}}</div>
+              <div class="info-descr">VISIT CLIENT PROFILE</div>
+            </div>
+            <div class="actions">
+              <vvc-media-button media="Video"
+                                [contactId]="loadedCustomer.contactId"
+                                [offer]="videoOfferUpgrade"></vvc-media-button>
+              <vvc-hangup-button *ngIf="hasVideo(loadedCustomer.contactId)"
+                  [contactId]="loadedCustomer.contactId"></vvc-hangup-button>
+            </div>
+          </div>
+          <div class="chat-area">
+            <vvc-chat [ref]="'ref-' + loadedCustomer.customerId"
+
+                      [campaignId]="outboundOptions.campaignId"
+                      [entryPointId]="outboundOptions.entryPointId"
+                      [customerToken]="loadedCustomer.customerToken"
+
+                      [contactId]="loadedCustomer.contactId"
+                      [convId]="loadedCustomer.convId"
+                      [previousConvIds]="loadedCustomer.previousConvIds"
+                      (vvcContactIdChange)="contactIdChange($event, loadedCustomer.customerId)"
+            ></vvc-chat>
+          </div>
+        </div>
+      </div>
+      <div id="incoming-area" *ngIf="onIncomingOffer">
+        <vvc-media-upgrade [contactId]="loadedCustomer.contactId"
+                           [user]="customersInfo[loadedCustomer.customerId]"
+                           [offer]="lastMediaOffer"
+                           (decline)="declineOffer($event, selectedCustomerId, contactByCustomer[selectedCustomerId])"
+                           (accept)="acceptOffer($event, loadedCustomer.customerId, loadedCustomer.contactId)"></vvc-media-upgrade>
+      </div>
+    </div>
+  </div>
+</div>
+
+<vvc-ad-core #adCore (vvcEvents)="vivochaEvent($event)"></vvc-ad-core>
+<!--
+<div id="dashboard">
+  <div class="col" style="width: 300px; flex: none">
+    <div class="box">
+      <div class="box-content">
+        <div style="border: 1px solid black"
+             [ngClass]="{ selectedrow: c === customerSelected }"
+             *ngFor="let c of getCustomers(); trackBy: trackByCustomerId"
+            (click)="selectCustomer(c)">
+          {{ c }} <button *ngIf="customerMap[c].pending" (click)="assign(c)">assign</button>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-content">
+        <button (click)="customerSelected = null">unselect</button>
+        <span *ngIf="customerSelected">
+          <button (click)="closeContact()">close contact</button>
+          <button (click)="closeConversation()">close conversation</button>
+          <button (click)="mute()">mute</button>
+          <button (click)="unmute()">unmute</button>
+          <button (click)="removeLocalVideo()">remove local video</button>
+          <button (click)="addLocalVideo()">add local video</button>
+          <button (click)="upgradeToVideo()">UPGRADE TO VIDEO</button>
+          <button (click)="downgradeVideo()">VIDEO DOWNGRADE</button>
+        </span>
+        <div *ngIf="agent">
+          <div><vvc-avatar size="large" [url]="agent.avatar"></vvc-avatar></div>
+          <div><b>{{agent.nick}}</b> - ({{agent.firstname}} {{agent.lastname}})</div>
+
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-content">
+        <button (click)="createOutbound()">Create Outbound</button>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-title">Remote Video</div>
+      <div class="box-content" *ngIf="customerMap[customerSelected]?.contactId">
+        <vvc-video-vivocha-remote [contactId]="customerMap[customerSelected].contactId"></vvc-video-vivocha-remote>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-title">Local Video</div>
+      <div class="box-content" *ngIf="customerMap[customerSelected]?.contactId">
+        <vvc-video-vivocha-local [contactId]="customerMap[customerSelected].contactId"></vvc-video-vivocha-local>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-title">Status Menu</div>
+      <div class="box-content">
+        <button>menu</button>
+        <vvc-popover #popMe>
+          <div>Hello Spank</div>
+        </vvc-popover>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="box">
+      <div class="box-content"  style="height: 742px;">
+        <div style="border: 1px solid black; height: 100%;flex-direction: column"
+             class="selected"
+             *ngIf="customerSelected">
+          <div style="flex:none">{{customerSelected}} - {{customerMap[customerSelected].convId}}</div>
+          <div style="flex: auto;display: flex;width: 100%;">
+            <vvc-chat-vivocha [ref]="'ref-' + customerSelected"
+                              [campaignId]="outboundOptions.campaignId"
+                              [entryPointId]="outboundOptions.entryPointId"
+                              [customerToken]="customerMap[customerSelected].customerToken"
+                              [contactId]="customerMap[customerSelected].contactId"
+                              [scriptId]="outboundOptions.scriptId"
+                              [convId]="customerMap[customerSelected].convId"
+                              [previousConvIds]="customerMap[customerSelected].previousConvIds"
+                              (vvcContactIdChange)="contactIdChange($event, customerSelected)"></vvc-chat-vivocha>
+            <div style="position: absolute; z-index: 2;left: 3px;right: 3px;bottom: 3px;top: 3px;"
+                 *ngIf="customerMap[customerSelected].onOffer">
+              <vvc-media-upgrade [contactId]="customerMap[customerSelected].contactId"
+                                 [user]="customers[customerSelected]"
+                                 [offer]="customerMap[customerSelected].lastOffer"
+                                 (decline)="declineOffer($event, customerSelected)"
+                                 (accept)="acceptOffer($event, customerSelected)"></vvc-media-upgrade>
+            </div>
+          </div>
+        </div>
+        <!--
+        <div style="border: 1px solid black; height: 100%;flex-direction: column"
+             *ngFor="let c of getCustomers()"
+             [ngClass]="{ selected: c === customerSelected, hide: c !== customerSelected }">
+          <div style="height: 400px; border: 1px solid pink">
+
+            <vvc-video-vivocha [ref]="'refv-' + c"
+                               [contactId]="customerMap[c].contactId"></vvc-video-vivocha>
+
+          </div>
+
+          <div style="flex:none">{{c}} - {{customerMap[c].convId}}</div>
+          <div style="flex: auto;display: flex;width: 100%;">
+            <vvc-chat-vivocha [ref]="'ref-' + c"
+                              [campaignId]="outboundOptions.campaignId"
+                              [entryPointId]="outboundOptions.entryPointId"
+                              [customerToken]="customerMap[c].customerToken"
+                              [contactId]="customerMap[c].contactId"
+                              [convId]="customerMap[c].convId"
+                              [previousConvIds]="customerMap[c].previousConvIds"
+                              (vvcContactIdChange)="contactIdChange($event, c)"></vvc-chat-vivocha>
+            <div style="position: absolute; z-index: 2;left: 3px;right: 3px;bottom: 3px;top: 3px;"
+            *ngIf="customerMap[c].onOffer">
+              <vvc-media-upgrade [contactId]="customerMap[c].contactId"
+                                 [user]="customers[c]"
+                                 [offer]="customerMap[c].lastOffer"
+                                 (decline)="declineOffer($event, c)"
+                                 (accept)="acceptOffer($event, c)"></vvc-media-upgrade>
+            </div>
+          </div>
+        </div>
+        --
+      </div>
+    </div>
+  </div>
+</div>
+!--
+<div id="dashboard">
+
+  <div class="col">
+    <div class="box">
+      <div class="box-head">Queue -
+        <vvc-tt (click)="changeLang()" tr="WC.TEST" replace="user_@@_Marco__@@__nickname_@@_marchitos" _replace="{user: 'Marco' , nickname: 'marchitos' }]"></vvc-tt> -
+        <vvc-tt tr="WIDGET.vvc-button.NAME"></vvc-tt></div>
+      <div>
+        <vvc-tt tr="AD.ISWRITING"></vvc-tt>
+      </div>
+      <div class="box-content">
+        <div class="pending-card" *ngIf="contact">
+          <span class="media">[{{contact.contact.initial_preset}}]</span>
+          <span class="nick">{{contact.contact.nick}}</span>
+          <button (click)="assignContact()" *ngIf="!assigned">assign</button>
+        </div>
+        <div>
+          <button (click)="showUpgradeOffer = !showUpgradeOffer">tooggle upgrade area</button>
+        </div>
+      </div>
+    </div>
+    !--<vvc-img-preview></vvc-img-preview>--
+    <div class="box">
+      <div class="box-head">Video</div>
+      <div class="box-content" style="height: 300px">
+        <vvc-video *ngIf="contactId" [contactId]="contactId"></vvc-video>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Screen shot</div>
+      <div class="box-content"></div>
+    </div>
+    <div class="box">
+      <div class="box-head">Textarea</div>
+      <div class="box-content">
+        <vvc-chat-textarea style="--vvc-chat-area-show-send: none"
+            [placeholder]="'scrivi qui...'"
+            (vvcOnSend)="sendMessage($event)"
+            (vvcOnChange)="textChange($event)">
+          !--
+          <vvc-icon slot="send-button" name="bell" size="small"></vvc-icon>
+          <span slot="caps-buttons">
+            <span><vvc-upload-button></vvc-upload-button></span>
+          </span>
+          --
+        </vvc-chat-textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="box">
+      <div class="box-head">Customer Info</div>
+      <div class="box-content">
+        <div class="info-card" *ngIf="assigned">
+          <span title="{{contact.contact.nick}}">{{contact.contact.nick}}</span>
+          <span title="{{contact.contact.engagement_name}}">{{contact.contact.engagement_name}}</span>
+          <span title="{{contact.contact.entrypoint_name}}">{{contact.contact.entrypoint_name}}</span>
+          <span title="{{contact.contact.first_title}}">{{contact.contact.first_title}}</span>
+          <span title="{{contact.contact.first_uri}}">{{contact.contact.first_uri}}</span>
+          <span title="{{contact.contact.properties.color}}">{{contact.contact.properties.color}}</span>
+          <span title="{{contact.contact.serv_lang}}">{{contact.contact.serv_lang}}</span>
+          <span title="{{contact.contact.serv_name}}">{{contact.contact.serv_name}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Chat</div>
+      <div class="box-content" style="height: 600px; position: relative">
+        <div style="position: absolute;top:0;bottom:0;left:0;right:0;z-index: 1">
+          <vvc-contact-chat *ngIf="contactId" [contactId]="contactId"></vvc-contact-chat>
+        </div>
+        <div *ngIf="showUpgradeOffer" style="position: absolute;top:0;bottom:0;left:0;right:0;z-index: 2;">
+          <vvc-media-upgrade [offer]="mediaOffer" [contactId]="contactId"></vvc-media-upgrade>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="box">
+      <div class="box-head">New Vivocha Chat</div>
+      <div class="box-content" style="height: 400px; position: relative">
+        <vvc-chat-vivocha *ngIf="contactId" [contactId]="contactId"></vvc-chat-vivocha>
+      </div>
+    </div>
+  </div>
+</div>
+<button (click)="changeLang()">change lang</button>
+--
+<vvc-ad-core *ngIf="count === 1"
+  #adCore
+  world="tevez"
+  acct="marchitos"
+  version="1"
+  language="en"
+  jwt="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJhbGVzc2FuZHJvIiwiZXhwIjoxNjI0MDAyOTE2fQ.pEhhcMlDbidhaxdeZXc4HnLU-K9egW-2QbnjjYyFmrE"
+  (vvcEvents)="vivochaEvent($event)"
+  (vvcContactsEvents)="vvcContactEvent($event)"
+></vvc-ad-core>
+
+!--
+<vvc-layout #layoutElem style="--sidebar-width: 200px">
+  <vvc-toolbar slot="toolbar" (click)="toggleSidebar()">
+    <div slot="left">
+      <div style="">logo</div>
+    </div>
+    <div slot="center">custom app</div>
+    <div slot="right">user stuff</div>
+  </vvc-toolbar>
+  <vvc-sidebar slot="sidebar" side="left" (click)="toggleSidebar()">SIDEBAR</vvc-sidebar>
+
+
+  <vvc-group orientation="horizontal">
+    <vvc-panel size="70">Uno</vvc-panel>
+    <vvc-panel size="30">Due</vvc-panel>
+  </vvc-group>
+
+</vvc-layout>
+-->
+<!--
+<div style="width: 200px; padding: 10px; margin-top: 20px; display: block">
+  <vvc-slider pin ticks snaps step="20"></vvc-slider>
+</div>
+<div style="width: 200px; padding: 10px; display: block">
+  <vvc-slider step="20" orientation="vertical" value="10" ticks snaps>
+    <vvc-icon name="video" slot="start"></vvc-icon>
+    <vvc-icon name="bell" slot="end"></vvc-icon>
+
+  </vvc-slider>
+</div>
+
+
+<video src="https://vivocha-attachments.s3.amazonaws.com/vvc_test1/20191106a39de8bf91f184be420c88865d03fe6d/00387ff2f199f80a3b6d5651818667219003781340a4a2c58174d2ee688ae4f4.webm"></video>
+
+<div style="width: 800px; height: 400px; border: 2px dashed darkgray; margin: auto; box-sizing: border-box">
+
+  <vvc-video-player
+      file-a="https://vivocha-attachments.s3.amazonaws.com/vvc_test1/20191106a39de8bf91f184be420c88865d03fe6d/00387ff2f199f80a3b6d5651818667219003781340a4a2c58174d2ee688ae4f4.webm"
+      file-b="https://vivocha-attachments.s3.amazonaws.com/vvc_test1/20191106a39de8bf91f184be420c88865d03fe6d/242803b3d7b87ab875ddd1949ab783904a7622bd8d1e6ff0cc5b037ce5514be5.webm">
+  </vvc-video-player>
+
+
+  <vvc-slider pin dual-thumbs snaps step="10" ticks #slider value="50" (vvcChange)="setSlideValue($event)">
+    <vvc-icon name="bell" slot="start"></vvc-icon>
+    <vvc-icon name="bell" slot="end"></vvc-icon>
+  </vvc-slider>
+  <div>{{this.slideValue}}</div>
+  <div>
+    <button (click)="moveSlider(slider, 50)">move to 50</button>
+  </div>
+
+
+</div>
+
+<div id="appWrap">
+<vvc-group orientation="horizontal">
+  <vvc-panel size="60">
+    <vvc-tabs>
+       <vvc-tabs-bar slot="top">
+         <vvc-tab-nav tab="uno">Titolo1</vvc-tab-nav>
+         <vvc-tab-nav tab="due">Titolo2</vvc-tab-nav>
+       </vvc-tabs-bar>
+
+        <vvc-tab tab="uno">
+          <div class="info-card" *ngIf="assigned">
+            <span title="{{contact.contact.nick}}">{{contact.contact.nick}}</span>
+            <span title="{{contact.contact.engagement_name}}">{{contact.contact.engagement_name}}</span>
+            <span title="{{contact.contact.entrypoint_name}}">{{contact.contact.entrypoint_name}}</span>
+            <span title="{{contact.contact.first_title}}">{{contact.contact.first_title}}</span>
+            <span title="{{contact.contact.first_uri}}">{{contact.contact.first_uri}}</span>
+            <span title="{{contact.contact.properties.color}}">{{contact.contact.properties.color}}</span>
+            <span title="{{contact.contact.serv_lang}}">{{contact.contact.serv_lang}}</span>
+            <span title="{{contact.contact.serv_name}}">{{contact.contact.serv_name}}</span>
+          </div>
+        </vvc-tab>
+        <vvc-tab tab="due">
+          Contenuto 2
+        </vvc-tab>
+    </vvc-tabs>
+  </vvc-panel>
+  <vvc-panel size="20">
+    <vvc-contact-chat *ngIf="contactId" [contactId]="contactId"></vvc-contact-chat>
+  </vvc-panel>
+  <vvc-panel size="20">
+
+    <vvc-group orientation="vertical">
+      <vvc-panel size="50">
+
+        <div class="pending-card" *ngIf="contact">
+          <span class="media">[{{contact.contact.initial_preset}}]</span>
+          <span class="nick">{{contact.contact.nick}}</span>
+          <button (click)="assignContact()" *ngIf="!assigned">assign</button>
+        </div>
+
+      </vvc-panel>
+      <vvc-panel size="50">
+
+        <vvc-video *ngIf="contactId" [contactId]="contactId"></vvc-video>
+
+      </vvc-panel>
+    </vvc-group>
+
+  </vvc-panel>
+</vvc-group>
+</div>
+
+-->
+<!--
+<div id="dashboard">
+
+  <div class="col">
+    <div class="box">
+      <div class="box-head">Queue -
+        <vvc-tt (click)="changeLang()" tr="WC.TEST" replace="user_@@_Marco__@@__nickname_@@_marchitos"></vvc-tt> -
+        <vvc-tt tr="WIDGET.vvc-button.NAME"></vvc-tt></div>
+      <div>
+        <vvc-tt tr="AD.ISWRITING"></vvc-tt>
+      </div>
+      <div class="box-content">
+        <div class="pending-card" *ngIf="contact">
+          <span class="media">[{{contact.contact.initial_preset}}]</span>
+          <span class="nick">{{contact.contact.nick}}</span>
+          <button (click)="assignContact()" *ngIf="!assigned">assign</button>
+        </div>
+        <div>
+          <button (click)="showUpgradeOffer = !showUpgradeOffer">tooggle upgrade area</button>
+        </div>
+      </div>
+    </div>
+    --<vvc-img-preview></vvc-img-preview>--
+    <div class="box">
+      <div class="box-head">Video</div>
+      <div class="box-content" style="height: 300px">
+        <vvc-video *ngIf="contactId" [contactId]="contactId"></vvc-video>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Screen shot</div>
+      <div class="box-content"></div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="box">
+      <div class="box-head">Customer Info</div>
+      <div class="box-content">
+        <div class="info-card" *ngIf="assigned">
+          <span title="{{contact.contact.nick}}">{{contact.contact.nick}}</span>
+          <span title="{{contact.contact.engagement_name}}">{{contact.contact.engagement_name}}</span>
+          <span title="{{contact.contact.entrypoint_name}}">{{contact.contact.entrypoint_name}}</span>
+          <span title="{{contact.contact.first_title}}">{{contact.contact.first_title}}</span>
+          <span title="{{contact.contact.first_uri}}">{{contact.contact.first_uri}}</span>
+          <span title="{{contact.contact.properties.color}}">{{contact.contact.properties.color}}</span>
+          <span title="{{contact.contact.serv_lang}}">{{contact.contact.serv_lang}}</span>
+          <span title="{{contact.contact.serv_name}}">{{contact.contact.serv_name}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="box">
+      <div class="box-head">Chat</div>
+      <div class="box-content" style="height: 600px; position: relative">
+        <div style="position: absolute;top:0;bottom:0;left:0;right:0;z-index: 1">
+          <vvc-contact-chat *ngIf="contactId" [contactId]="contactId"></vvc-contact-chat>
+        </div>
+        <div *ngIf="showUpgradeOffer" style="position: absolute;top:0;bottom:0;left:0;right:0;z-index: 2;">
+          <vvc-media-upgrade [offer]="mediaOffer" [contactId]="contactId"></vvc-media-upgrade>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<vvc-ad-core
+    #adCore
+    world="h1"
+    acct="vvc_training"
+    version="1"
+    language="it"
+    __jwt="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJ2dmNfdHJhaW5pbmciLCJleHAiOjE1NzA1MjU5OTcsImlhdCI6MTU3MDUyMjM5N30.rrOUQhUvgXxM4WvyBbYUOOIqWLBTqW6ppb11HidGS3E"
+    (vvcEvents)="vivochaEvent($event)"
+    (vvcContactsEvents)="vvcContactEvent($event)"
+></vvc-ad-core>
+-->
+
+
+
