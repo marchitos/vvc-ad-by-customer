@@ -1,5 +1,5 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {VvcEvent, VvcEventType} from './events';
+import {VvcAction, VvcEvent, VvcEventType} from './events';
 
 @Component({
   selector: 'app-root',
@@ -98,7 +98,43 @@ export class AppComponent implements OnInit {
     { id: 'CUSTOM.INCOMING_REQUEST',
       values: {
         it: { value: 'Richiesta in arrivo...', state: 'final'},
-        en: { value: 'Incoming request...', state: 'final' } } }
+        en: { value: 'Incoming request...', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.AUDIO_INPUT',
+      values: {
+        it: { value: 'Microfoni', state: 'final'},
+        en: { value: 'Microphones', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.AUDIO_OUTPUT',
+      values: {
+        it: { value: 'Casse', state: 'final'},
+        en: { value: 'Speakers', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.VIDEO_INPUT',
+      values: {
+        it: { value: 'Webcam', state: 'final'},
+        en: { value: 'Webcam', state: 'final' } } },
+    { id: 'AD.MEDIA.PANEL.AUDIO_INPUT',
+      values: {
+        it: { value: 'Microfono', state: 'final'},
+        en: { value: 'Microphone', state: 'final' } } },
+    { id: 'AD.MEDIA.PANEL.AUDIO_OUTPUT',
+      values: {
+        it: { value: 'Dispositivo di uscita', state: 'final'},
+        en: { value: 'Output device', state: 'final' } } },
+    { id: 'AD.MEDIA.PANEL.VIDEO_INPUT',
+      values: {
+        it: { value: 'Camera', state: 'final'},
+        en: { value: 'Camera', state: 'final' } } },
+    { id: 'AD.MEDIA.MODAL_PANEL.TITLE',
+      values: {
+        it: { value: 'Impostazioni', state: 'final'},
+        en: { value: 'Settings', state: 'final' } } },
+    { id: 'AD.MEDIA.MODAL_PANEL.AUDIO.TITLE',
+      values: {
+        it: { value: 'Voce', state: 'final'},
+        en: { value: 'Voice', state: 'final' } } },
+    { id: 'AD.MEDIA.MODAL_PANEL.VIDEO.TITLE',
+      values: {
+        it: { value: 'Video', state: 'final'},
+        en: { value: 'Video', state: 'final' } } },
     ];
 
   private core;
@@ -172,7 +208,6 @@ export class AppComponent implements OnInit {
     };
   }
   handleVivochaEvents(evt: VvcEvent) {
-    console.log('UPDATE-EVT', evt);
     switch (evt.type) {
       case VvcEventType.READY: {
         this.init();
@@ -243,10 +278,10 @@ export class AppComponent implements OnInit {
   }
 
   acceptOffer(offer, customerId, contactId) {
-    this.core.action({ type: 'acceptOffer', contactId, data: offer });
+    this.core.action({ type: VvcAction.ACCEPT_OFFER, contactId, data: offer });
   }
   declineOffer(offer, customerId, contactId) {
-    this.core.action({ type: 'declineOffer', contactId });
+    this.core.action({ type: VvcAction.DECLINE_OFFER, contactId });
     this.onIncomingOffer = false;
   }
   showList() {
@@ -298,7 +333,7 @@ export class AppComponent implements OnInit {
         type: 'loadTranslations',
         data: {
           langMap: this.txl8Map,
-          useLang: 'it',
+          useLang: 'en',
           defaultLang: 'en'
         }
       });

@@ -11,6 +11,18 @@
     </div>
     <div id="content">
 
+      <div style="display: flex; margin-top: 30px;position: relative; z-index: 0">
+        <div id="device-panel" style="border: 1px solid #979797; width: 400px; height: 300px; margin-left: 50px;">
+          <vvc-voice-conf-panel></vvc-voice-conf-panel>
+        </div>
+
+        <div id="device-video-panel" style="border: 1px solid #979797; width: 400px; height: 300px; margin-left: 50px;">
+          <vvc-video-conf-panel></vvc-video-conf-panel>
+        </div>
+
+      </div>
+
+
     </div>
   </div>
   <div id="side-content" [ngClass]="{ open: showContactBar }">
@@ -47,6 +59,9 @@
                [ngClass]="{ show: hasVideo(loadedCustomer.contactId), 'fullscreen': isVideoFullScreen }">
             <vvc-video-default [contactId]="loadedCustomer.contactId"
                                [isFullScreen]="isVideoFullScreen"
+                               [showHangup]="false"
+                               [showRecButton]="false"
+                               [showMoreButton]="false"
                                (minimize)="unsetFullScreen($event, false)"
                                (maximize)="setFullScreen($event, true)"></vvc-video-default>
           </div>
