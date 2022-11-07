@@ -73,8 +73,8 @@ export class AppComponent implements OnInit {
     {
       id: 'AD.CALENDAR.DATE_FORMAT',
       values: {
-        it: { value: 'DD/MM/YYYY', state: 'final' },
-        en: { value: 'MM/DD/YYYY', state: 'final' } } },
+        it: { value: 'yyyy.MM.dd', state: 'final' },
+        en: { value: 'yyyy.MM.dd', state: 'final' } } },
     {
       id: 'AD.MEDIA.ACCEPT_VIDEO',
       values: {
@@ -111,6 +111,30 @@ export class AppComponent implements OnInit {
       values: {
         it: { value: 'Webcam', state: 'final'},
         en: { value: 'Webcam', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.BACKGROUND.MENU_TITLE',
+      values: {
+        it: { value: 'Sfondo', state: 'final'},
+        en: { value: 'Background', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.BACKGROUND.ENABLED',
+      values: {
+        it: { value: 'Attivo', state: 'final'},
+        en: { value: 'Enabled', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.BACKGROUND.DISABLED',
+      values: {
+        it: { value: 'Disattivo', state: 'final'},
+        en: { value: 'Disabled', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.BACKGROUND.BLUR',
+      values: {
+        it: { value: '(Blur)', state: 'final'},
+        en: { value: '(Blur)', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.BACKGROUND.VIRTUALIMAGE',
+      values: {
+        it: { value: '(Immagine)', state: 'final'},
+        en: { value: '(Virtual Image)', state: 'final' } } },
+    { id: 'AD.MEDIA.MORE_MENU.BACKGROUND.CHROMAKEY',
+      values: {
+        it: { value: '(Chroma Key)', state: 'final'},
+        en: { value: '(Chroma Key)', state: 'final' } } },
     { id: 'AD.MEDIA.PANEL.AUDIO_INPUT',
       values: {
         it: { value: 'Microfono', state: 'final'},
@@ -123,6 +147,22 @@ export class AppComponent implements OnInit {
       values: {
         it: { value: 'Camera', state: 'final'},
         en: { value: 'Camera', state: 'final' } } },
+    { id: 'AD.MEDIA.PANEL.BACKGROUND_ENABLE',
+      values: {
+        it: { value: 'Abilita', state: 'final'},
+        en: { value: 'Enable', state: 'final' } } },
+    { id: 'AD.MEDIA.PANEL.BACKGROUND_MODE',
+      values: {
+        it: { value: 'Modalità Background', state: 'final'},
+        en: { value: 'Background Mode', state: 'final' } } },
+    { id: 'AD.MEDIA.PANEL.BACKGROUND_IMAGE',
+      values: {
+        it: { value: 'Immagine di background', state: 'final'},
+        en: { value: 'Background Image', state: 'final' } } },
+    { id: 'AD.MEDIA.PANEL.CHROMA_KEY_COLOR',
+      values: {
+        it: { value: 'Colore di sfondo del chromakey', state: 'final'},
+        en: { value: 'Color of the chromakey background', state: 'final' } } },
     { id: 'AD.MEDIA.MODAL_PANEL.TITLE',
       values: {
         it: { value: 'Impostazioni', state: 'final'},
@@ -135,6 +175,11 @@ export class AppComponent implements OnInit {
       values: {
         it: { value: 'Video', state: 'final'},
         en: { value: 'Video', state: 'final' } } },
+    { id: 'AD.MEDIA.MODAL_PANEL.BACKGROUND.TITLE',
+      values: {
+        it: { value: 'Sfondi', state: 'final'},
+        en: { value: 'Background', state: 'final' } } },
+
     ];
 
   private core;
@@ -146,13 +191,26 @@ export class AppComponent implements OnInit {
     entryPointId: '1624010966487',
     channelId: 'web',
     mediaPreset: 'chat',
+    dataCollection: [{
+      name: "conversational_banking",
+      data: [
+        {
+          name: "support",
+          value: "gold"
+        },
+        {
+          name: "topic",
+          value: "pippo"
+        }
+      ]
+    }]
     // scriptId: '5f58df611e8f5ca36d5ab666'
   };
   customerIds = [];
   customersInfo: { [customerId: string]: { nickname: string, pending: boolean, [other: string]: any }} = {};
   customerByContact: { [contactId: string]: string} = {};
   contactByCustomer: { [customerId: string]: string} = {};
-  mediaByContact: { [contactId: string]: { hasVideo?: boolean } } = {};
+  mediaByContact: { [contactId: string]: { hasVideo?: boolean, hasVideoScreenCast?: boolean } } = {};
   lastMessageByCustomer: { [customerId: string]: { message?: string, isNew?: boolean, ts?: Date } } = {};
   lastMediaOffer: any = {};
   videoOfferUpgrade: any = {
@@ -183,6 +241,10 @@ export class AppComponent implements OnInit {
   hasVideo(contactId) {
     if (!contactId) { return false; }
     return this.mediaByContact[contactId] && this.mediaByContact[contactId].hasVideo;
+  }
+  hasVideoScreenCast(contactId) {
+    if (!contactId) { return false; }
+    return this.mediaByContact[contactId] && this.mediaByContact[contactId].hasVideoScreenCast;
   }
   setFullScreen(evt, fullscreen) {
     this.isVideoFullScreen = fullscreen;
@@ -267,10 +329,18 @@ export class AppComponent implements OnInit {
           this.mediaByContact[evt.contactId] = {};
         }
         const mediaChange = evt.data;
+        console.log('MEDIA CHANGE ON APP', mediaChange);
         if (mediaChange.Video && (mediaChange.Video.tx || mediaChange.Video.rx)) {
           this.mediaByContact[evt.contactId] = {...this.mediaByContact[evt.contactId], hasVideo: true };
         } else {
           this.mediaByContact[evt.contactId] = {...this.mediaByContact[evt.contactId], hasVideo: false };
+        }
+        if (mediaChange.Screen && mediaChange.Screen.rx) {
+          this.isVideoFullScreen = true;
+          this.mediaByContact[evt.contactId] = {...this.mediaByContact[evt.contactId], hasVideoScreenCast: true };
+        } else {
+          this.isVideoFullScreen = false;
+          this.mediaByContact[evt.contactId] = {...this.mediaByContact[evt.contactId], hasVideoScreenCast: false };
         }
         break;
       }
@@ -297,7 +367,18 @@ export class AppComponent implements OnInit {
     this.loadedCustomer = this.getLoadedCustomer(customerId);
     this.lastMessageByCustomer[customerId] = { ...this.lastMessageByCustomer[customerId], isNew: false };
   }
+  closeConversation() {
+    //this.core.closeConversation();
+    const contactId = this.contactByCustomer[this.selectedCustomerId];
+    console.log('CLOSING CONV ON', contactId, this.contactByCustomer, this.selectedCustomerId);
+    if (contactId) {
+      console.log('closing conversation', contactId);
+      this.core.action({ type: VvcAction.CLOSE_CONVERSATION, data: contactId})
+    }
+
+  }
   contactIdChange(evt, customerId) {
+    console.log('CHANGING CONTACT ID', evt, customerId);
     const contactId = evt.detail;
     this.customersInfo[customerId].contactId = contactId;
     delete this.contactByCustomer[customerId];

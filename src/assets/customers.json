@@ -3,10 +3,12 @@
     "customerId": "leonardoid",
     "nickname": "Leonardo",
     "customerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Imxlb25hcmRvaWQiLCJhY2N0X2lkIjoibWFyY2hpdG9zIiwibmlja25hbWUiOiJMZW9uYXJkbyJ9.HPHIJEu4ZFlHakJg2uCBSd8fT7UE5gLzFB2F3Gqfh0Y",
+    "customerI1Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Imxlb25hcmRvaWQiLCJhY2N0X2lkIjoidnZjX3RyYWluaW5nIiwibmlja25hbWUiOiJMZW9uYXJkbyJ9.K6Fh80OwsipLl8bIKj5lcv_-GWdou5DDuC-Xe_AwFbg",
     "lastMessage": "Hello Leonardo here...",
     "lastMessageTs": "2021-06-17T07:56:58.946Z",
     "online": true,
-    "previousConvIds": ["60d589f5cb3efe711e81e41e", "60d5895ecb3efe286281e41b", "60d588a6cb3efe2fc981e418"]
+    "previousTevezConvIds": ["62da561054b4fd1baffdaa2f","62b56b25ffe1950416f8b178"],
+    "previousConvIds": []
   },
   {
     "customerId": "gigiid",

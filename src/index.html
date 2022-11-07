@@ -8,13 +8,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 
-
+<!--
   <script type="module" src="https://components.vivocha.com/latest/vivocha/vivocha.esm.js"></script>
   <script nomodule src="https://components.vivocha.com/latest/vivocha/vivocha.js"></script>
+-->
+
+  <script type="module" src="https://tevez.vivocha.com:4201/vivocha/vivocha.esm.js"></script>
+  <script nomodule src="https://tevez.vivocha.com:4201/vivocha/vivocha.js"></script>
 
   <style>
     :root {
-      /** COLORS **
+        /** COLORS **
       --vvc-color-primary-base: green;
 
       ** VVC-CHAT-INPUT **
@@ -24,6 +28,34 @@
       --vvc-chat-send-button-color: red;
 
        */
+        --vvc-theme-font-family: "Open Sans", sans-serif;
+        --vvc-theme-text-size4: 12px;
+        --vvc-color-primary-base: #00793d;
+        --vvc-color-primary-shade: #4aac76;
+        --vvc-color-primary-tint: #008844;
+        --vvc-cms1-remote-background: #F6F6F6;
+        --vvc-cms1-local-background: #DCF5E9;
+        --vvc-balloon-show-avatar: none;
+        --vvc-cms1-local-color: $color-black;
+        --vvc-balloon-corners: 21px;
+        --vvc-system-color: $color-grey-31;
+        --vvc-cms1-bullet-display: none;
+        --vvc-cms1-display-avatar: none;
+        --vvc-cms1-display-bottom-ts: block;
+        --vvc-cms1-display-top-ts: none;
+        --vvc-cms1-display-username: none;
+        --vvc-chat-send-button-disabled: #EDEDED;
+        --cv-avatar-background: #FC7F25;
+        --vvc-theme-level2-base: #F6F6F6;
+    }
+    .blink {
+        animation: blinker 2s linear infinite;
+    }
+
+    @keyframes blinker {
+        50% {
+            opacity: 0;
+        }
     }
   </style>
 
